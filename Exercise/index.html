@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+  <head>
+    <meta charset="utf-8" />
+    <script src="libs/echarts.min.js"></script>
+    <title>Bonus Exercise</title>
+    <script src="../js/d3.js"></script>
+  </head>
+  <body style="height: 100%; margin: 0">
+        <H1> Yunhyeok Lee E-Chart TreeMap </H1>
+    <div id="container" style="height: 100%"></div>
+    <script type="text/javascript">
+      d3.json("../data/us_population.json").then(function (Data) {
+        let data = [ // Assign dataset
+          { parentColumn: "", childColumn: "A" }, 
+          { parentColumn: "A", childColumn: "B" },
+          { parentColumn: "A", childColumn: "C" },
+          { parentColumn: "B", childColumn: "D", val: 30 },
+          { parentColumn: "B", childColumn: "E", val: 50 },
+          { parentColumn: "C", childColumn: "F", val: 20 },
+          { parentColumn: "C", childColumn: "G", val: 40 },
+          { parentColumn: "C", childColumn: "H", val: 60 },
+        ];
+
+        // Setting input dataset
+        let stratify_function = d3
+          .stratify()
+          .id((d) => d["childColumn"]) // add it
+          .parentId((d) => d["parentColumn"]);
+        
+          let stratify_formatted = stratify_function(data);
+
+        // Iterate Caller Function for tree map
+        data_function = (data) => {
+          let myArr = [];
+          if (data.children) {
+            data.children.map((d) => {
+              myArr.push(data_function(d));
+            });
+          }
+          if (myArr.length == 0 && data.data.val)
+            return { name: data.id, value: data.data.val };
+          return { name: data.id, children: myArr };
+        };
+
+        let data_formatted = data_function(stratify_formatted);
+
+        let dom = document.getElementById("container"); // Choose container
+        let treeMap = echarts.init(dom); // Initialize TREE map 
+        treeMap.setOption(
+          {
+            // Define Format of data visualization
+            series: [
+              {
+                type: "treemap", // Choose TreeMap as a divisualization
+                data: data_formatted.children, // Data is coming from before
+                label: {
+                  // show or hide labels
+                  show: true,
+                  fontSize: 20,
+                  formatter: function (d) {
+                    return d.data.name + "\n" + d.data.value;
+                  },
+                },
+              },
+            ],
+          },
+          true
+        );
+      });
+    </script>
+  </body>
+</html>
